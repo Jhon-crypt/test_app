@@ -99,6 +99,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: _noteColor,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           leading: IconButton(
@@ -120,46 +121,56 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           ],
         ),
         body: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.zero,
           children: [
-            TextField(
-              controller: _titleController,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1A1A1A),
-              ),
-              decoration: InputDecoration(
-                hintText: 'Title',
-                hintStyle: TextStyle(
-                  color: const Color(0xFF1A1A1A).withOpacity(0.5),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                controller: _titleController,
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
+                  color: Color(0xFF1A1A1A),
                 ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: InputDecoration(
+                  hintText: 'Title',
+                  hintStyle: TextStyle(
+                    color: const Color(0xFF1A1A1A).withOpacity(0.5),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                maxLines: null,
+                autofocus: widget.note == null,
+                enableInteractiveSelection: true,
               ),
-              maxLines: null,
             ),
             const SizedBox(height: 8),
-            TextField(
-              controller: _contentController,
-              style: TextStyle(
-                fontSize: 16,
-                color: const Color(0xFF1A1A1A).withOpacity(0.8),
-              ),
-              decoration: InputDecoration(
-                hintText: 'Write your note...',
-                hintStyle: TextStyle(
-                  color: const Color(0xFF1A1A1A).withOpacity(0.5),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                controller: _contentController,
+                style: TextStyle(
                   fontSize: 16,
+                  color: const Color(0xFF1A1A1A).withOpacity(0.8),
                 ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: InputDecoration(
+                  hintText: 'Write your note...',
+                  hintStyle: TextStyle(
+                    color: const Color(0xFF1A1A1A).withOpacity(0.5),
+                    fontSize: 16,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                enableInteractiveSelection: true,
+                autofocus: widget.note != null,
               ),
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              textCapitalization: TextCapitalization.sentences,
             ),
           ],
         ),
