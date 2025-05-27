@@ -85,12 +85,22 @@ class _NotesListScreenState extends State<NotesListScreen> {
       );
     }
     return AppBar(
-      title: const Text(
-        'Notes',
-        style: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w600,
-        ),
+      title: Row(
+        children: [
+          const Text(
+            'Our Notes',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(
+            Icons.favorite,
+            color: Colors.pink.shade300,
+            size: 28,
+          ),
+        ],
       ),
       actions: [
         Container(
@@ -128,7 +138,17 @@ class _NotesListScreenState extends State<NotesListScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('About Notes'),
+        title: Row(
+          children: [
+            const Text('About Our Notes'),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.favorite,
+              color: Colors.pink.shade300,
+              size: 20,
+            ),
+          ],
+        ),
         content: const Text('A simple and beautiful notes app to capture your thoughts and memories.'),
         actions: [
           TextButton(
