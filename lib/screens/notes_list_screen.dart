@@ -21,19 +21,107 @@ class _NotesListScreenState extends State<NotesListScreen> {
     const Color(0xFFB5F4F4), // Cyan
     const Color(0xFFE0C0FF), // Purple
   ];
+  
+  String _searchQuery = '';
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Note> get _filteredNotes {
+    if (_searchQuery.isEmpty) return _notes;
+    final query = _searchQuery.toLowerCase();
+    return _notes.where((note) {
+      return note.title.toLowerCase().contains(query) ||
+          note.content.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchQuery = '';
+        _searchController.clear();
+      }
+    });
+  }
+
+  void _updateSearchQuery(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    if (_isSearching) {
+      return AppBar(
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _toggleSearch,
+        ),
+        title: TextField(
+          controller: _searchController,
+          onChanged: _updateSearchQuery,
+          style: const TextStyle(
+            fontSize: 20,
+            color: Colors.white,
+          ),
+          decoration: const InputDecoration(
+            hintText: 'Search notes...',
+            hintStyle: TextStyle(
+              color: Colors.white70,
+              fontSize: 20,
+            ),
+            border: InputBorder.none,
+          ),
+          autofocus: true,
+        ),
+      );
+    }
+    return AppBar(
+      title: const Text(
+        'Notes',
+        style: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      actions: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.search, size: 24),
+            onPressed: _toggleSearch,
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.info_outline, size: 24),
+            onPressed: _showInfo,
+          ),
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
 
   String _formatDate(DateTime date) {
     return DateFormat('MMM d, y').format(date);
-  }
-
-  void _showSearchBar() {
-    // TODO: Implement search functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Search coming soon!'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   void _showInfo() {
@@ -60,166 +148,154 @@ class _NotesListScreenState extends State<NotesListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final notes = _filteredNotes;
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A1A),
-      appBar: AppBar(
-        title: const Text(
-          'Notes',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.search, size: 24),
-              onPressed: _showSearchBar,
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.info_outline, size: 24),
-              onPressed: _showInfo,
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: _notes.isEmpty
+      appBar: _buildAppBar(),
+      body: notes.isEmpty && _searchQuery.isNotEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const EmptyStateIllustration(),
-                  const SizedBox(height: 32),
+                  Icon(
+                    Icons.search_off_outlined,
+                    size: 64,
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
-                    'Create your first note!',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    'No matching notes found',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Colors.white70,
-                          fontWeight: FontWeight.w500,
                         ),
                   ),
                 ],
               ),
             )
-          : ListView.builder(
-              itemCount: _notes.length,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              itemBuilder: (context, index) {
-                final note = _notes[index];
-                return Dismissible(
-                  key: Key(note.id),
-                  background: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.error,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 24),
-                    child: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.white,
-                      size: 28,
-                    ),
+          : notes.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const EmptyStateIllustration(),
+                      const SizedBox(height: 32),
+                      Text(
+                        'Create your first note!',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ],
                   ),
-                  direction: DismissDirection.endToStart,
-                  onDismissed: (direction) => _deleteNote(index, note),
-                  child: Card(
-                    elevation: 0,
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    color: note.color,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: InkWell(
-                      onTap: () => _editNote(note),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                )
+              : ListView.builder(
+                  itemCount: notes.length,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  itemBuilder: (context, index) {
+                    final note = notes[index];
+                    return Dismissible(
+                      key: Key(note.id),
+                      background: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.error,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 24),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      direction: DismissDirection.endToStart,
+                      onDismissed: (direction) => _deleteNote(index, note),
+                      child: Card(
+                        elevation: 0,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        color: note.color,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: InkWell(
+                          onTap: () => _editNote(note),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    note.title,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF1A1A1A),
-                                    ),
-                                  ),
-                                ),
-                                PopupMenuButton<String>(
-                                  icon: Icon(
-                                    Icons.more_vert,
-                                    color: const Color(0xFF1A1A1A).withOpacity(0.6),
-                                  ),
-                                  onSelected: (value) {
-                                    if (value == 'edit') {
-                                      _editNote(note);
-                                    } else if (value == 'delete') {
-                                      _deleteNote(_notes.indexOf(note), note);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.edit_outlined),
-                                          SizedBox(width: 8),
-                                          Text('Edit'),
-                                        ],
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        note.title,
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1A1A1A),
+                                        ),
                                       ),
                                     ),
-                                    const PopupMenuItem(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete_outline),
-                                          SizedBox(width: 8),
-                                          Text('Delete'),
-                                        ],
+                                    PopupMenuButton<String>(
+                                      icon: Icon(
+                                        Icons.more_vert,
+                                        color: const Color(0xFF1A1A1A).withOpacity(0.6),
                                       ),
+                                      onSelected: (value) {
+                                        if (value == 'edit') {
+                                          _editNote(note);
+                                        } else if (value == 'delete') {
+                                          _deleteNote(notes.indexOf(note), note);
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        const PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.edit_outlined),
+                                              SizedBox(width: 8),
+                                              Text('Edit'),
+                                            ],
+                                          ),
+                                        ),
+                                        const PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete_outline),
+                                              SizedBox(width: 8),
+                                              Text('Delete'),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
+                                if (note.content.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    note.content,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: const Color(0xFF1A1A1A).withOpacity(0.8),
+                                    ),
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ],
                             ),
-                            if (note.content.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                note.content,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: const Color(0xFF1A1A1A).withOpacity(0.8),
-                                ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
       floatingActionButton: Container(
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.1),
